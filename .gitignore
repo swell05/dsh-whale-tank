@@ -1,0 +1,35 @@
+# Node
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+*.tsbuildinfo
+
+# Build outputs
+lib/
+wttools/
+dist/
+coverage/
+
+# dsh-whale-tank runtime artifacts
+.sandbox/
+.vetting/
+.npm-cache-tmp/
+.pnpm-store/
+
+# 本地参考文档（保留在磁盘，不进入版本控制）
+docs/
+.doc/
+.scratch/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+.npmrc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 本地打包产物
+*.tgz

@@ -1,0 +1,5 @@
+# broken-plugin: entry points at a missing module — the structural dump passes,
+# the bounded boot must fail with `plugin tree failed to load`.
+- insert:
+    - id: whale-tank-broken-plugin
+      name: 'whale-tank-broken-plugin'

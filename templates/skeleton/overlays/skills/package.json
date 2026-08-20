@@ -1,0 +1,8 @@
+{
+  "dshSkeleton": {
+    "inject": ["skills"]
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-skill": "^0.1.0-rc.8"
+  }
+}

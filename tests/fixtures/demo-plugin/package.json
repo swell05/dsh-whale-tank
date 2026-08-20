@@ -1,0 +1,27 @@
+{
+  "name": "whale-tank-demo-plugin",
+  "version": "0.1.0",
+  "description": "Fixture host plugin used by plug/unplug selfcheck.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+  "scripts": {
+    "build": "node -e \"require('fs').mkdirSync('lib',{recursive:true}); require('fs').writeFileSync('lib/index.js', 'export const name = \\'whale-tank-demo-plugin\\'; export const inject = []; export function apply() {}')\""
+  }
+}

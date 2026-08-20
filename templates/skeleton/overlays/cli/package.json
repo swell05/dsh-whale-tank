@@ -1,0 +1,6 @@
+{
+  "bin": {
+    "{{name}}": "lib/cli.js"
+  },
+  "dshSkeleton": {}
+}

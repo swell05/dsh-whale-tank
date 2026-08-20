@@ -1,0 +1,7 @@
+# @swell05/dsh-whale-tank bundle patch: mount the whale-tank plugin (agent tools +
+# `dsh whale-tank <verb>` cmdline dispatch) into the composed profile tree.
+# name 必须是完整 scoped 包名（loader 按它 import；旧版误写 dsh-whale-tank 导致
+# ERR_MODULE_NOT_FOUND，发布包从未实测过 boot——实机发现并修复 2026-08-20）。
+- insert:
+    - id: dsh-whale-tank
+      name: '@swell05/dsh-whale-tank'

@@ -1,0 +1,4 @@
+# {{name}}: bundle patch mounting the plugin into the profile layer stack.
+- insert:
+    - id: {{name}}
+      name: '{{name}}'

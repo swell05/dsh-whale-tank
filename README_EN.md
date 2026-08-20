@@ -9,7 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/ecosystem-dsh--plugin-orange" alt="dsh-plugin"></a>
   <a href="https://www.npmjs.com/package/@swell05/dsh-whale-tank"><img src="https://img.shields.io/npm/v/@swell05/dsh-whale-tank" alt="npm version"></a>
 </p>
 
@@ -33,7 +32,7 @@ Plugin development is like renovation — you fence off the worksite first so yo
 
 Not sure about installing a plugin? Tank it before you install. `vet` runs three phases:
 
-1. **Static hazard check**: `npm pack` pulls the published artifact → the rule engine scans install scripts, credential references, external calls, eval/obfuscation — a high-severity hit means "not recommended", no execution;
+1. **Static hazard check**: `npm pack` pulls the published artifact → the rule engine scans install scripts, credential reads and their flow, external calls, eval/obfuscation — credentials are judged by source→sink: reading an API key is a *signal* (a legit LLM plugin reading a key to call a known provider passes), high-severity only when the key can flow to a non-provider destination (hardcoded or runtime) — a high-severity hit means "not recommended", no execution;
 2. **Restricted dynamic verification**: replica profile → two-layer conflict detection → plug/unplug cancellation (diff=0 to be clean), **untrusted code is not executed by default**;
 3. **LLM source review**: the model reads the candidate source for "dark tricks" the rule engine can't catch — obfuscated business logic, misleading descriptions, suspicious side effects/data exfiltration, version-poisoning signs — complementing the rule engine;
 

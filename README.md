@@ -9,7 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/ecosystem-dsh--plugin-orange" alt="dsh-plugin"></a>
   <a href="https://www.npmjs.com/package/@swell05/dsh-whale-tank"><img src="https://img.shields.io/npm/v/@swell05/dsh-whale-tank" alt="npm version"></a>
 </p>
 
@@ -33,7 +32,7 @@
 
 直接装插件没把握，装之前先装进鲸鱼缸把把关。`vet` 会走三阶段：
 
-1. **静态危害检查**：`npm pack` 拉发布产物 → 规则引擎扫 install 脚本、凭据引用、外联、eval/混淆——命中高危直接"不建议"，直接不执行；
+1. **静态危害检查**：`npm pack` 拉发布产物 → 规则引擎扫 install 脚本、凭据读取与流向、外联、eval/混淆——凭据按 source→sink 判级：读到 API key 是信号（正常 LLM 插件读 key 调已知服务商属预期、放行），凭据流向非服务商（硬编码/动态出口）才判高危；命中高危直接"不建议"，直接不执行；
 2. **受限动态验证**：复刻 profile → 两层冲突检测 → 插拔抵消（diff=0 才算干净），全程**默认不执行不可信代码**；
 3. **LLM 源码审查**：模型通读候选源码，找出规则引擎抓不到的"暗功夫"——混淆业务逻辑、误导性描述、可疑副作用/数据外发、版本投毒迹象，与规则引擎互相兜底；
 
